@@ -1,0 +1,67 @@
+# =============================================================================
+# UrbanRoadDamage — Severity & Priority Configuration (PRD Section 20.2)
+# =============================================================================
+#
+# PURPOSE
+# -------
+# This file defines the rule-based thresholds and parameters specified in
+# Section 20.2 of the Urban Pothole and Road Damage Assessment System PRD.
+#
+# PRD SPECIFICATION (Section 20.2):
+# ---------------------------------
+# Let a = box_area / image_area for a detection.
+#
+# Severity: High | Priority Action: Urgent
+#   - D40 pothole with a >= 2% (0.02)
+#   - OR D20 alligator crack with a >= 5% (0.05)
+#   - OR 3 or more D40 detections in one image
+#
+# Severity: Medium | Priority Action: Scheduled
+#   - D40 pothole with a < 2% (0.02)
+#   - OR D20 alligator crack with a < 5% (0.05)
+#   - OR D00/D10 crack with a >= 3% (0.03)
+#
+# Severity: Low | Priority Action: Monitor
+#   - D00/D10 crack with a < 3% (0.03)
+#   - Or only low-confidence detections
+#
+# Severity: None | Priority Action: No action
+#   - No detection above confidence threshold
+#
+# LIMITATION (PRD Section 20.2):
+# ------------------------------
+# Box area depends on camera distance and angle. These initial thresholds
+# are calibrated on the validation subset only and frozen before test evaluation.
+#
+# STATUS: DONE (Code complete; initial thresholds defined, calibration planned)
+# =============================================================================
+
+# 1. Detection confidence threshold
+confidence_threshold: 0.25
+
+# 2. Area ratio thresholds per class (a = box_area / image_area)
+thresholds:
+  D40_high_area: 0.02       # D40 with a >= 2% -> High
+  D40_high_count: 3         # >= 3 D40 detections -> High
+  D20_high_area: 0.05       # D20 with a >= 5% -> High
+  D00_D10_medium_area: 0.03 # D00 or D10 with a >= 3% -> Medium
+
+# 3. Class mapping and priority actions
+classes:
+  0: "D00"   # Longitudinal Crack
+  1: "D10"   # Transverse Crack
+  2: "D20"   # Alligator Crack
+  3: "D40"   # Pothole
+
+priority_actions:
+  High: "Urgent"
+  Medium: "Scheduled"
+  Low: "Monitor"
+  None: "No action"
+
+# Numeric rank for sorting urgency (higher = more urgent)
+priority_ranks:
+  Urgent: 3
+  Scheduled: 2
+  Monitor: 1
+  No action: 0

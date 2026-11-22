@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+.pytest_cache/
+
+# Large model binaries and checkpoints
+*.pt
+*.pth
+*.onnx
+*.engine
+models/best.onnx
+
+# Ultralytics runs & training logs
+runs/
+*.log
+
+# C++ Build directories
+build/
+bin/
+out/
+CMakeSettings.json
+.vs/
+
+# Results generated from inference runs (keep sample figures, ignore large dumps)
+results/*.mp4
+results/*.avi
+
+# OS files
+.DS_Store
+Thumbs.db
