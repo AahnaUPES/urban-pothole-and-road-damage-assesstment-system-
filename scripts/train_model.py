@@ -35,11 +35,13 @@ def run_training():
     # 1. Initialize YOLOv8n
     model = YOLO("yolov8n.pt")
 
-    # 2. Train on local CPU for 8 epochs
+    # 2. Train on local CPU for 16 epochs
     # imgsz=416 gives fast CPU inference and clean feature maps
+    # close_mosaic=5 disables mosaic in final epochs so negative background roads
+    # are learned cleanly without mixing defects onto clean pavement
     results = model.train(
         data=str(YAML_PATH),
-        epochs=8,
+        epochs=16,
         imgsz=416,
         batch=8,
         device="cpu",
@@ -49,6 +51,8 @@ def run_training():
         verbose=True,
         seed=42,
         augment=True,
+        close_mosaic=5,
+        cls=1.5,
         flipud=0.0,
         fliplr=0.5,
     )

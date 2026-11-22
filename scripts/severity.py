@@ -74,6 +74,52 @@ def load_config(config_path: Optional[Path] = None) -> Dict[str, Any]:
         return yaml.safe_load(f)
 
 
+def filter_road_surface_roi(
+    detections: List[Dict[str, Any]],
+    image_shape: Tuple[int, int],
+    horizon_ratio: float = 0.38,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """
+    Filter out false-positive detections located above the drivable road horizon.
+    (PRD Section 20.2 Rule 2: Vanishing Point / Horizon Prior).
+
+    In forward-facing vehicle dashcams, road surface defects (potholes, cracks)
+    can only physically exist on the active road pavement. Detections whose
+    vertical center is located in the upper portion of the frame (sky, tree canopy,
+    building rooftops, or overhead power lines) are discarded as non-road false alarms.
+
+    Parameters
+    ----------
+    detections : List[Dict[str, Any]]
+        Raw detections with 'box' key [x1, y1, x2, y2].
+    image_shape : Tuple[int, int]
+        (height, width) of the input image.
+    horizon_ratio : float
+        Fraction of image height above which detections are rejected (default 0.38).
+
+    Returns
+    -------
+    Tuple[List[Dict], List[Dict]]
+        (valid_road_detections, discarded_horizon_detections)
+    """
+    img_h, _ = image_shape
+    horizon_y = img_h * horizon_ratio
+    valid = []
+    discarded = []
+
+    for d in detections:
+        box = d.get("box", [0, 0, 0, 0])
+        _, y1, _, y2 = box
+        cy = (y1 + y2) / 2.0
+        # If the vertical center of the detection is below the road horizon, it is on the road
+        if cy >= horizon_y:
+            valid.append(d)
+        else:
+            discarded.append(d)
+
+    return valid, discarded
+
+
 def compute_box_area_ratio(box: List[float], image_shape: Tuple[int, int]) -> float:
     """
     Compute area ratio: a = box_area / image_area.

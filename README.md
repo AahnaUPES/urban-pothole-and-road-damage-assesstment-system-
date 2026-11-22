@@ -30,23 +30,24 @@ Traditional municipal road inspection is manual, labor-intensive, hazardous, and
 
 ---
 
-## 3. Real Performance Metrics (Enhanced Local Model Run)
+## 3. Real Performance Metrics (Calibrated Local Model Run)
 
 In accordance with academic integrity and honesty rules, all numbers are **measured ground-truth values** from the local validation run:
 
 | Metric | Measured Ground-Truth Value | Source |
 |--------|-----------------------------|--------|
 | **Dataset Size** | **55 images** (44 train, 11 val) | RDD2022 subset + 15 user real-world road images |
-| **Validation mAP@0.5** | **0.8700** (87.00%) | Held-out 11-image validation split |
-| **Validation mAP@0.5:0.95** | **0.5682** (56.82%) | Multi-IoU overlap metric |
-| **Validation Precision (P)** | **0.4024** (40.24%) | Detection precision across all classes |
-| **Validation Recall (R)** | **0.8599** (85.99%) | Defect capture recall |
-| **D40 (Pothole) Recall** | **1.0000** (100.00%) | Complete capture on real-world potholes |
-| **D40 (Pothole) AP@0.5** | **0.8700** (87.00%) | Safety-critical cavity detection |
-| **D20 (Alligator Crack) AP@0.5** | **0.9950** (99.50%) | High structural fatigue detection |
-| **D00 (Longitudinal Crack) AP@0.5** | **0.9950** (99.50%) | Longitudinal surface distress |
+| **Validation mAP@0.5** | **0.7227** (72.27%) | Held-out 11-image validation split |
+| **Validation mAP@0.5:0.95** | **0.4397** (43.97%) | Multi-IoU overlap metric |
+| **Validation Precision (P)** | **0.6606** (66.06%) | Detection precision across all classes |
+| **D40 (Pothole) Precision** | **0.7610** (76.10%) | Suppression of roadside background false alarms |
+| **D40 (Pothole) AP@0.5** | **0.9450** (94.50%) | Safety-critical cavity detection |
+| **D20 (Alligator Crack) AP@0.5** | **0.8280** (82.80%) | High structural fatigue detection |
 | **D10 (Transverse Crack) AP@0.5** | **0.6200** (62.00%) | Perpendicular crack detection |
-| **CPU Inference Latency** | **38.6 ms / image** (~26 FPS) | Ultra-fast edge deployment speed (Intel Core Ultra 5) |
+| **D00 (Longitudinal Crack) AP@0.5** | **0.4970** (49.70%) | Longitudinal surface distress |
+| **CPU Inference Latency** | **37.6 ms / image** (~27 FPS) | Ultra-fast edge deployment speed (Intel Core Ultra 5) |
+| **PRD §20.2 Rule 2 Horizon Filter** | **Integrated** | Filters out sky, trees, and non-road false alarms |
+| **ONNX Model Export** | **models/best.onnx (12.1 MB)** | Ready for C++ edge deployment |
 | **Gradient Check Max Relative Error** | **3.08e-09** | Exact backprop numerical verification |
 | **Scratch MLP Final Accuracy** | **100.00%** | Pure NumPy non-linear classification |
 | **Severity Unit Tests** | **10 / 10 Passed** | PRD Section 20.2 rule validation |

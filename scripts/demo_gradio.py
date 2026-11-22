@@ -41,7 +41,7 @@ _REPO_ROOT = _SCRIPT_DIR.parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
-from severity import analyse_image, load_config, CLASS_ID_TO_CODE
+from severity import analyse_image, load_config, CLASS_ID_TO_CODE, filter_road_surface_roi
 
 MODEL_PATH = _REPO_ROOT / "models" / "best.pt"
 
@@ -61,7 +61,7 @@ SEVERITY_COLORS_RGB = {
     "None": (128, 128, 128),    # Gray
 }
 
-DEFAULT_CONF = 0.25
+DEFAULT_CONF = 0.40
 
 
 def check_and_load_model():
@@ -81,9 +81,12 @@ def check_and_load_model():
 def run_pipeline(
     input_image: Optional[Image.Image],
     conf_threshold: float = DEFAULT_CONF,
+    filter_horizon: bool = True,
 ) -> Tuple[Optional[np.ndarray], str, pd.DataFrame]:
     """
     Run detection + rule-based severity and priority assessment.
+    Includes PRD §20.2 Rule 2 Road Surface Horizon Prior to eliminate false positives
+    on tree canopies, sky, and non-road regions.
     """
     if input_image is None:
         return None, "Please upload an image.", pd.DataFrame()
@@ -99,7 +102,6 @@ def run_pipeline(
             "*(Supplying placeholder detection to preview Gradio severity UI. "
             "Real detections will run once `models/best.pt` is copied from Colab.)*"
         )
-        # Synthetic sample detections for demonstration
         raw_detections = [
             {"box": [int(img_w * 0.2), int(img_h * 0.4), int(img_w * 0.4), int(img_h * 0.6)], "class_id": 3, "confidence": 0.88},
             {"box": [int(img_w * 0.5), int(img_h * 0.2), int(img_w * 0.7), int(img_h * 0.35)], "class_id": 1, "confidence": 0.76},
@@ -118,7 +120,21 @@ def run_pipeline(
                 "class_id": int(cl),
                 "confidence": float(c),
             })
-        status_banner = f"✅ **Inference completed with {len(raw_detections)} detections.**"
+
+        # Apply PRD §20.2 Rule 2 Road Surface Horizon Filter
+        discarded_count = 0
+        if filter_horizon:
+            raw_detections, discarded = filter_road_surface_roi(raw_detections, (img_h, img_w), horizon_ratio=0.38)
+            discarded_count = len(discarded)
+
+        if raw_detections:
+            status_banner = f"✅ **Inference completed: {len(raw_detections)} road defect(s) detected.**"
+            if discarded_count > 0:
+                status_banner += f" *(Suppressed {discarded_count} non-road horizon false positive(s) like trees/sky)*"
+        else:
+            status_banner = "✅ **Road surface clear: No defects detected above confidence threshold.**"
+            if discarded_count > 0:
+                status_banner += f" *(Filtered out {discarded_count} non-road false positive(s) on trees/sky/structures)*"
 
     # Evaluate Rule-based Severity & Priority per PRD §20.2
     assessment = analyse_image(raw_detections, (img_h, img_w))
@@ -202,6 +218,7 @@ def build_app() -> gr.Blocks:
             with gr.Column():
                 input_img = gr.Image(type="pil", label="Upload Road Image")
                 conf_slider = gr.Slider(minimum=0.05, maximum=1.0, value=DEFAULT_CONF, step=0.05, label="Confidence Threshold")
+                horizon_filter = gr.Checkbox(value=True, label="🛣️ Suppress Non-Road False Positives (PRD §20.2 Horizon Prior: ignores trees/sky)")
                 detect_btn = gr.Button("🔍 Run Assessment", variant="primary")
 
                 # Sample test images (dynamic discovery)
@@ -228,7 +245,7 @@ def build_app() -> gr.Blocks:
 
         detect_btn.click(
             fn=run_pipeline,
-            inputs=[input_img, conf_slider],
+            inputs=[input_img, conf_slider, horizon_filter],
             outputs=[output_img, summary_md, summary_table],
         )
 
