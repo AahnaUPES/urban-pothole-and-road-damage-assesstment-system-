@@ -203,6 +203,21 @@ def build_app() -> gr.Blocks:
                 input_img = gr.Image(type="pil", label="Upload Road Image")
                 conf_slider = gr.Slider(minimum=0.05, maximum=1.0, value=DEFAULT_CONF, step=0.05, label="Confidence Threshold")
                 detect_btn = gr.Button("🔍 Run Assessment", variant="primary")
+
+                # Sample test images
+                samples_dir = _REPO_ROOT / "sample_inputs"
+                sample_files = [
+                    str(samples_dir / "road_pothole.jpg"),
+                    str(samples_dir / "road_cracks.jpg"),
+                    str(samples_dir / "road_clean.jpg"),
+                ]
+                existing_samples = [[f] for f in sample_files if Path(f).exists()]
+                if existing_samples:
+                    gr.Examples(
+                        examples=existing_samples,
+                        inputs=input_img,
+                        label="📷 Click a sample image to test",
+                    )
             with gr.Column():
                 output_img = gr.Image(type="numpy", label="Annotated Road Defects (Color-coded by Severity)")
                 summary_md = gr.Markdown("### Assessment Summary\n*Upload an image and run assessment.*")
