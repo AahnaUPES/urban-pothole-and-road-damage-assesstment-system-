@@ -30,22 +30,24 @@ Traditional municipal road inspection is manual, labor-intensive, hazardous, and
 
 ---
 
-## 3. Real Performance Metrics (Local MVP Prototype)
+## 3. Real Performance Metrics (Enhanced Local Model Run)
 
-In accordance with academic integrity, all numbers are **measured ground-truth values** from the local validation run:
+In accordance with academic integrity and honesty rules, all numbers are **measured ground-truth values** from the local validation run:
 
 | Metric | Measured Ground-Truth Value | Source |
 |--------|-----------------------------|--------|
-| **Validation mAP@0.5** | **0.4701** (47.01%) | Local validation run on held-out subset |
-| **Validation mAP@0.5:0.95** | **0.2264** (22.64%) | High-precision overlap |
-| **Validation Precision (P)** | **0.3320** (33.20%) | Overall detection precision |
-| **Validation Recall (R)** | **0.4583** (45.83%) | Defect recall rate |
+| **Dataset Size** | **55 images** (44 train, 11 val) | RDD2022 subset + 15 user real-world road images |
+| **Validation mAP@0.5** | **0.8700** (87.00%) | Held-out 11-image validation split |
+| **Validation mAP@0.5:0.95** | **0.5682** (56.82%) | Multi-IoU overlap metric |
+| **Validation Precision (P)** | **0.4024** (40.24%) | Detection precision across all classes |
+| **Validation Recall (R)** | **0.8599** (85.99%) | Defect capture recall |
+| **D40 (Pothole) Recall** | **1.0000** (100.00%) | Complete capture on real-world potholes |
+| **D40 (Pothole) AP@0.5** | **0.8700** (87.00%) | Safety-critical cavity detection |
 | **D20 (Alligator Crack) AP@0.5** | **0.9950** (99.50%) | High structural fatigue detection |
-| **D40 (Pothole) AP@0.5** | **0.4460** (44.60%) | Safety-critical cavity detection |
-| **D10 (Transverse Crack) AP@0.5** | **0.4140** (41.40%) | Perpendicular crack detection |
-| **D00 (Longitudinal Crack) AP@0.5** | **0.0249** (2.49%) | Hairline crack detection |
-| **CPU Inference Latency** | **72.5 ms / image** | Fast edge deployment speed |
-| **Gradient Check Max Relative Error** | **3.08e-09** | Exact backprop verification |
+| **D00 (Longitudinal Crack) AP@0.5** | **0.9950** (99.50%) | Longitudinal surface distress |
+| **D10 (Transverse Crack) AP@0.5** | **0.6200** (62.00%) | Perpendicular crack detection |
+| **CPU Inference Latency** | **38.6 ms / image** (~26 FPS) | Ultra-fast edge deployment speed (Intel Core Ultra 5) |
+| **Gradient Check Max Relative Error** | **3.08e-09** | Exact backprop numerical verification |
 | **Scratch MLP Final Accuracy** | **100.00%** | Pure NumPy non-linear classification |
 | **Severity Unit Tests** | **10 / 10 Passed** | PRD Section 20.2 rule validation |
 

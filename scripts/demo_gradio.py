@@ -204,14 +204,12 @@ def build_app() -> gr.Blocks:
                 conf_slider = gr.Slider(minimum=0.05, maximum=1.0, value=DEFAULT_CONF, step=0.05, label="Confidence Threshold")
                 detect_btn = gr.Button("🔍 Run Assessment", variant="primary")
 
-                # Sample test images
+                # Sample test images (dynamic discovery)
                 samples_dir = _REPO_ROOT / "sample_inputs"
-                sample_files = [
-                    str(samples_dir / "road_pothole.jpg"),
-                    str(samples_dir / "road_cracks.jpg"),
-                    str(samples_dir / "road_clean.jpg"),
-                ]
-                existing_samples = [[f] for f in sample_files if Path(f).exists()]
+                sample_files = sorted(
+                    [str(p) for p in samples_dir.glob("*.*") if p.suffix.lower() in [".jpg", ".png", ".jpeg"]]
+                )
+                existing_samples = [[f] for f in sample_files]
                 if existing_samples:
                     gr.Examples(
                         examples=existing_samples,
