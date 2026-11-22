@@ -1,0 +1,35 @@
+# =============================================================================
+# UrbanRoadDamage — Main C++ & Python Application Configuration
+# =============================================================================
+#
+# PURPOSE:
+# Central configuration for the C++ command-line application (road_damage)
+# and evaluation harness. All thresholds are configurable here, not hardcoded.
+#
+# =============================================================================
+
+model:
+  onnx_path: "models/best.onnx"
+  input_width: 640
+  input_height: 640
+  score_threshold: 0.25    # Bounding box confidence cutoff
+  nms_threshold: 0.45      # Non-Maximum Suppression IoU threshold
+
+classes:
+  - "D00 — Longitudinal Crack"
+  - "D10 — Transverse Crack"
+  - "D20 — Alligator Crack"
+  - "D40 — Pothole"
+
+severity_rules:
+  # Area ratio a = box_area / image_area
+  d40_high_area: 0.02       # >= 2% -> High (Urgent)
+  d40_high_count: 3         # >= 3 potholes in image -> High (Urgent)
+  d20_high_area: 0.05       # >= 5% -> High (Urgent)
+  d00_d10_med_area: 0.03    # >= 3% -> Medium (Scheduled)
+
+export:
+  save_annotated_images: true
+  save_json: true
+  save_csv: true
+  default_output_dir: "results/"
