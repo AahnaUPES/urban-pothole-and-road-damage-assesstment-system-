@@ -189,37 +189,90 @@ def run_pipeline(
         "Box [x1, y1, x2, y2]": "—",
     }])
 
-    # Build markdown result card
-    badge_colors = {"High": "red", "Medium": "orange", "Low": "green", "None": "gray"}
-    sev_color = badge_colors.get(overall_sev, "gray")
+    # Build modern summary card
+    badge_bg = {
+        "High": "#ef4444",
+        "Medium": "#f97316",
+        "Low": "#10b981",
+        "None": "#64748b",
+    }
+    action_bg = {
+        "Urgent": "#dc2626",
+        "Scheduled": "#ea580c",
+        "Monitor": "#059669",
+        "No action": "#475569",
+    }
+    sev_bg = badge_bg.get(overall_sev, "#64748b")
+    prio_bg = action_bg.get(prio_action, "#475569")
 
     markdown_card = f"""
-### Assessment Summary
-- **Overall Severity**: <span style="color:{sev_color}; font-weight:bold; font-size:1.2em;">{overall_sev}</span>
-- **Recommended Maintenance Action**: <span style="color:{sev_color}; font-weight:bold; font-size:1.2em;">{prio_action}</span>
-- **Rule Triggered**: *{reason}*
-- **Status**: {status_banner}
+<div style="background:#0f172a; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:12px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+    <div>
+      <span style="color:#94a3b8; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Overall Severity</span>
+      <div style="margin-top:4px;">
+        <span style="background:{sev_bg}; color:#ffffff; padding:4px 14px; border-radius:6px; font-size:1.05rem; font-weight:700;">
+          {overall_sev.upper()}
+        </span>
+      </div>
+    </div>
+    <div>
+      <span style="color:#94a3b8; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">Maintenance Action</span>
+      <div style="margin-top:4px;">
+        <span style="background:{prio_bg}; color:#ffffff; padding:4px 14px; border-radius:6px; font-size:1.05rem; font-weight:700;">
+          {prio_action.upper()}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #1e293b; padding-top:10px; margin-top:8px;">
+    <div style="color:#cbd5e1; font-size:0.9rem; margin-bottom:4px;">
+      <strong style="color:#f8fafc;">Rule Triggered:</strong> <span style="color:#e2e8f0;">{reason}</span>
+    </div>
+    <div style="color:#94a3b8; font-size:0.85rem;">
+      {status_banner}
+    </div>
+  </div>
+</div>
 """
 
     return annotated, markdown_card, summary_df
 
 
 def build_app() -> gr.Blocks:
-    with gr.Blocks(title="UrbanRoadDamage — Road Damage Assessment Demo") as app:
-        gr.Markdown(
+    custom_css = """
+    .gradio-container { max-width: 1380px !important; margin: auto !important; }
+    #detect_btn { font-size: 1.05rem !important; font-weight: 600 !important; }
+    """
+
+    with gr.Blocks(title="Road Damage Assessment System", css=custom_css, theme=gr.themes.Soft()) as app:
+        gr.HTML(
             """
-            # 🛣️ Urban Pothole & Road Damage Assessment System
-            ### Project 23 | Deep Learning - Semester V | Municipal Infrastructure
-            **Primary Pipeline**: YOLOv8s Baseline / RetinaNet (ONNX) + Rule-Based Severity & Priority (§20.2)
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; border-bottom:2px solid #334155; padding-bottom:14px; margin-bottom:18px;">
+              <div>
+                <h1 style="margin:0; font-size:1.85rem; font-weight:700; color:#f8fafc; display:flex; align-items:center; gap:10px;">
+                  <span>🛣️</span> Urban Pothole & Road Damage Assessment System
+                </h1>
+                <p style="margin:6px 0 0 0; color:#94a3b8; font-size:0.95rem;">
+                  Automated Pavement Distress Detection & Explainable Municipal Priority Dispatch
+                </p>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                <span style="background:#1e293b; color:#38bdf8; border:1px solid #0284c7; padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:600;">YOLOv8 Edge Vision</span>
+                <span style="background:#1e293b; color:#4ade80; border:1px solid #16a34a; padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:600;">RDD2022 Standards</span>
+                <span style="background:#1e293b; color:#f59e0b; border:1px solid #d97706; padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:600;">PRD §20.2 Rule Engine</span>
+              </div>
+            </div>
             """
         )
 
         with gr.Row():
-            with gr.Column():
+            with gr.Column(scale=1):
                 input_img = gr.Image(type="pil", label="Upload Road Image")
                 conf_slider = gr.Slider(minimum=0.05, maximum=1.0, value=DEFAULT_CONF, step=0.05, label="Confidence Threshold")
                 horizon_filter = gr.Checkbox(value=True, label="🛣️ Suppress Non-Road False Positives (PRD §20.2 Horizon Prior: ignores trees/sky)")
-                detect_btn = gr.Button("🔍 Run Assessment", variant="primary")
+                detect_btn = gr.Button("🔍 Run AI Road Assessment", variant="primary", size="lg", elem_id="detect_btn")
 
                 # Sample test images (dynamic discovery)
                 samples_dir = _REPO_ROOT / "sample_inputs"
@@ -233,9 +286,16 @@ def build_app() -> gr.Blocks:
                         inputs=input_img,
                         label="📷 Click a sample image to test",
                     )
-            with gr.Column():
+            with gr.Column(scale=1):
                 output_img = gr.Image(type="numpy", label="Annotated Road Defects (Color-coded by Severity)")
-                summary_md = gr.Markdown("### Assessment Summary\n*Upload an image and run assessment.*")
+                summary_md = gr.Markdown(
+                    """
+                    <div style="background:#0f172a; border:1px solid #334155; border-radius:12px; padding:16px; color:#94a3b8;">
+                      <h4 style="margin:0 0 6px 0; color:#f8fafc;">Assessment Summary</h4>
+                      <em>Upload a road image or click any sample thumbnail on the left, then click <strong>Run AI Road Assessment</strong>.</em>
+                    </div>
+                    """
+                )
 
         with gr.Row():
             summary_table = gr.Dataframe(
