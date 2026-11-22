@@ -54,11 +54,12 @@ def get_github_token():
         blob_size = p_cred.contents.CredentialBlobSize
         raw_bytes = ctypes.string_at(p_cred.contents.CredentialBlob, blob_size)
         CredFree(p_cred)
-        # Windows Credential Manager stores UTF-16LE or ASCII/UTF-8
+        if raw_bytes.startswith(b"gho_") or raw_bytes.startswith(b"ghp_"):
+            return raw_bytes.decode("ascii").strip()
         try:
-            return raw_bytes.decode("utf-16le").strip()
+            return raw_bytes.decode("utf-8").strip()
         except Exception:
-            return raw_bytes.decode("utf-8", errors="ignore").strip()
+            return raw_bytes.decode("utf-16le", errors="ignore").strip()
     return None
 
 
