@@ -1,0 +1,13 @@
+# ============================================================================
+# UrbanRoadDamage — Python Dependencies
+# ============================================================================
+# Pin every package so the demo is reproducible across machines.
+# Install with:  pip install -r requirements.txt
+# ============================================================================
+
+gradio==4.44.1            # Web UI framework for the inference demo
+ultralytics==8.3.40       # YOLOv8 object-detection library
+opencv-python==4.10.0.84  # Image processing (used internally by ultralytics)
+torch==2.5.1              # PyTorch deep-learning backend
+numpy==1.26.4             # Numerical arrays (images, boxes, etc.)
+Pillow==10.4.0            # PIL — image loading / saving
